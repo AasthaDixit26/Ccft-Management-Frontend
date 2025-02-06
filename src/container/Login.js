@@ -1,6 +1,9 @@
-import { TextField, Button, Box, Paper } from "@mui/material";
+import { TextField, Button, Box, Paper, Snackbar } from "@mui/material";
 import { styled } from "@mui/system";
 import { useNavigate } from "react-router-dom";
+import {handleHttpRequest, storeLocalStorage } from "../api/utility/Utility";
+import { loginUser } from "../api/const/api-url";
+import { useState } from "react";
 
 const LoginContainer = styled(Box)({
   display: "flex",
@@ -44,23 +47,70 @@ const SubmitButton = styled(Button)({
 
 const LoginPage = () => {
   const navigate = useNavigate();
-
-  const handleLogin = () => {
-    navigate("/dashboard"); 
+  let [formData, setFormData] = useState({
+    "email":"",
+    "password":""
+  })
+  let [toastBar,setToastBar] = useState({"val":0,"status":false});
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  }; 
+  const delay = (ms) => new Promise((resolve, reject) => {
+    return setTimeout(resolve,ms);
+  })
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try{
+      const response = await handleHttpRequest("POST",loginUser, formData, false);
+      if(response.status === 200){
+        setToastBar({
+          "val":1,
+          "status":true
+        })
+        storeLocalStorage(response.data.id);
+        await delay(2000);
+        navigate("/dashboard")
+      }else{
+        console.log('Error');
+      }
+    }catch(error){
+      setToastBar({
+        "val":-1,
+        "status":true
+      })
+    }
   };
   return (
+    <>
+    {
+      toastBar.val === 1 ? <Snackbar
+          open={toastBar.status}
+          autoHideDuration={3000}
+          onClose={() => setToastBar(false)}
+          message="Successfully Logged In"
+          anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+        /> : 
+        <Snackbar
+          open={toastBar.status}
+          autoHideDuration={3000}
+          onClose={() => setToastBar(false)}
+          message="Invalid Username or password"
+          anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+        />
+      }
     <LoginContainer>
       <LoginBox elevation={3}>
         <Header >Login</Header>
         <Box display="flex" flexDirection="column" alignItems="center" padding="20px">
-          <TextField label="User Name" variant="outlined" size="small" fullWidth margin="dense" />
-          <TextField label="Password" type="password" variant="outlined" size="small" fullWidth margin="dense" />
-          <SubmitButton variant="contained" fullWidth onClick={handleLogin}>
+          <TextField label="User Name" variant="outlined" size="small" fullWidth margin="dense" onChange={handleChange} value={formData.email} name="email"/>
+          <TextField label="Password" type="password" variant="outlined" size="small" fullWidth margin="dense" onChange={handleChange} value={formData.pasword} name="password"/>
+          <SubmitButton variant="contained" fullWidth onClick={handleSubmit}>
             Submit
           </SubmitButton>
         </Box>
       </LoginBox>
     </LoginContainer>
+    </>
   );
 };
 

@@ -56,7 +56,31 @@ const App = () => {
           }
         />
         <Route
-          path="/all-projects"
+          path="/projects"
+          element={
+            <Layout>
+              <AllProjectsPage />
+            </Layout>
+          }
+        />
+        <Route
+          path="/clients"
+          element={
+            <Layout>
+              <AllProjectsPage />
+            </Layout>
+          }
+        />
+        <Route
+          path="/vendors"
+          element={
+            <Layout>
+              <AllProjectsPage />
+            </Layout>
+          }
+        />
+        <Route
+          path="/tests"
           element={
             <Layout>
               <AllProjectsPage />
