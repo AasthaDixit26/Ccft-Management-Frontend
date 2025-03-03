@@ -9,11 +9,12 @@ import Tests from './container/test';
 import Users from './container/User';
 import Vendors from './container/vendor'; 
 import Sidebar from './container/sidebar';
+import LoginPage from './container/Login';
 
 const App = () => {
   return (
     <Router>
-      <Sidebar />
+      {/* <Sidebar /> */}
       <Routes>
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/all-projects" element={<AllProjects />} />
@@ -23,6 +24,7 @@ const App = () => {
         <Route path="/tests" element={<Tests />} />
         <Route path="/users" element={<Users />} />
         <Route path="/vendors" element={<Vendors />} /> {/* Add the route for Vendors */}
+        <Route path="/" element={<LoginPage />} />
       </Routes>
     </Router>
   );

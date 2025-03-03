@@ -17,27 +17,33 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import ClientForm from "./ClientForm";
 import Sidebar from "./sidebar";
 import Swal from "sweetalert2";
+import { getAllClient } from "../api/const/api-url";
+import { getLocalStorage, handleHttpRequest } from "../api/utility/Utility";
+import { useNavigate } from "react-router-dom";
 
 const Client = () => {
   const [clients, setClients] = useState([]);
   const [open, setOpen] = useState(false);
   const [editingClient, setEditingClient] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchData = async () => {
-      const response = [
-        {
-          id: "acfb3f88-65f3-4f78-bedd-2ba10734df37",
-          c_name: "XYZ Laboratory",
-          c_full_address: "ABC Building Floor 6th Modinagar(201201) Ghz.",
-          c_gst: "234rt567ghj789",
-          c_poc: "dfg5678hjio789",
-          c_phone_number: "8979003126",
-          c_date: "Jan 30, 2025, 21:41",
-        },
-      ];
-      setClients(response);
+      try{
+                const token = getLocalStorage();
+                if(token === null){
+                  navigate("/")
+                }
+                const response = await handleHttpRequest("GET",getAllClient, "", true,token);
+                if(response.status === 202){
+                  setClients(response.data);
+                }else{
+                  console.log('------------Error----------');
+                }
+              }catch(error){
+                console.log(error);
+              }
     };
     fetchData();
   }, []);
@@ -135,7 +141,8 @@ const Client = () => {
                 <TableCell>GST</TableCell>
                 <TableCell>POC</TableCell>
                 <TableCell>Phone Number</TableCell>
-                <TableCell>Date Added</TableCell>
+                <TableCell>Arrival Date</TableCell>
+                <TableCell>Delivery Date</TableCell>
                 <TableCell>Actions</TableCell>
               </TableRow>
             </TableHead>
@@ -143,13 +150,14 @@ const Client = () => {
               {clients.map((client, index) => (
                 <TableRow key={client.id}>
                   <TableCell>{index + 1}</TableCell>
-                  <TableCell>{client.id}</TableCell> 
+                  <TableCell>{client.c_id}</TableCell> 
                   <TableCell>{client.c_name}</TableCell>
                   <TableCell>{client.c_full_address}</TableCell>
                   <TableCell>{client.c_gst}</TableCell>
                   <TableCell>{client.c_poc}</TableCell>
                   <TableCell>{client.c_phone_number}</TableCell>
-                  <TableCell>{client.c_date}</TableCell>
+                  <TableCell>{client.c_received_date}</TableCell>
+                  <TableCell>{client.c_delivery_date}</TableCell>
                   <TableCell>
                     <Box sx={{ display: "flex", gap: 1 }}>
                       <EditIcon

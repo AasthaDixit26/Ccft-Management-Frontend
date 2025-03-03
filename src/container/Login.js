@@ -60,7 +60,6 @@ const LoginPage = () => {
   })
   const handleSubmit = async (e) => {
     e.preventDefault();
-    navigate("/dashboard");
     try{
       const response = await handleHttpRequest("POST",loginUser, formData, false);
       if(response.status === 200){
@@ -69,16 +68,18 @@ const LoginPage = () => {
           "status":true
         })
         storeLocalStorage(response.data.id);
+       // console.log(response.data.id);
         await delay(2000);
         navigate("/dashboard")
       }else{
-        console.log('Error');
+        console.log('------------Error----------');
       }
     }catch(error){
       setToastBar({
         "val":-1,
         "status":true
       })
+      console.log(error);
     }
   };
   return (

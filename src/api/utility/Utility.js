@@ -11,8 +11,6 @@ export function getLocalStorage(){
     return token;
 }
 
-
-
 export async function handleHttpRequest(requestType, endpoint, payload = {}, isToken = false, token = "") {
   try {
     let headers = {

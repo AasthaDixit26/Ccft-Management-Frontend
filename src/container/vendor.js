@@ -19,27 +19,33 @@ import AddIcon from "@mui/icons-material/Add";
 import VendorForm from "./VendorForm";
 import Sidebar from "./sidebar";
 import Swal from "sweetalert2";
+import { useNavigate } from "react-router-dom";
+import { getAllVendor } from "../api/const/api-url";
+import { getLocalStorage, handleHttpRequest } from "../api/utility/Utility";
 
 const Vendor = () => {
   const [vendors, setVendors] = useState([]);
+  const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [editingVendor, setEditingVendor] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
-      const vendorResponse = [
-        {
-          v_id: "aef82a75-ed07-496d-8084-676acd29ae04",
-          v_name: "PQR Vendor",
-          v_poc: "34567dfghj",
-          v_add: "345678fghj",
-          phone: "8979003126",
-          v_gst: "5678fghjk",
-          v_date_added: "32-01-2025",
-        },
-      ];
-      setVendors(vendorResponse);
+      try{
+        const token = getLocalStorage();
+        if(token === null){
+          navigate("/")
+        }
+        const response = await handleHttpRequest("GET",getAllVendor, "", true,token);
+        if(response.status === 202){
+          setVendors(response.data);
+        }else{
+          console.log('------------Error----------');
+        }
+      }catch(error){
+        console.log(error);
+      }
     };
     fetchData();
   }, []);

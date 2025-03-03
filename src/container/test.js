@@ -24,6 +24,9 @@ import TestForm from "./testform";
 import VendorForm from "./VendorForm";
 import Sidebar from "./sidebar";
 import Swal from "sweetalert2";
+import { getLocalStorage, handleHttpRequest } from "../api/utility/Utility";
+import { getAllTest } from "../api/const/api-url";
+import { useNavigate } from "react-router-dom";
 
 const Test = () => {
   const [tests, setTests] = useState([]);
@@ -32,41 +35,23 @@ const Test = () => {
   const [isVendorFormOpen, setIsVendorFormOpen] = useState(false);
   const [editingTest, setEditingTest] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
-
+  const navigate = useNavigate();
   useEffect(() => {
     const fetchData = async () => {
-      const testResponse = [
-        {
-          t_id: "631b227e-ff88-426d-b88b-21929f59b5ee",
-          t_status: "Pending",
-          t_name: "ABC Test",
-          t_protocol: "Https",
-          t_update: "Updated",
-          t_masked_report: "Test.pdf",
-          vendor: {
-            v_id: "aef82a75-ed07-496d-8084-676acd29ae04",
-            v_name: "PQR Vendor",
-            v_poc: "34567dfghj",
-            v_add: "345678fghj",
-            phone: "8979003126",
-            v_gst: "5678fghjk",
-            v_date_added: "32-01-2025",
-          },
-        },
-      ];
-      const vendorResponse = [
-        {
-          v_id: "aef82a75-ed07-496d-8084-676acd29ae04",
-          v_name: "PQR Vendor",
-          v_poc: "34567dfghj",
-          v_add: "345678fghj",
-          phone: "8979003126",
-          v_gst: "5678fghjk",
-          v_date_added: "32-01-2025",
-        },
-      ];
-      setTests(testResponse);
-      setVendors(vendorResponse);
+      try{
+        const token = getLocalStorage();
+        if(token === null){
+          navigate("/")
+        }
+        const response = await handleHttpRequest("GET",getAllTest, "", true,token);
+        if(response.status === 202){
+          setTests(response.data);
+        }else{
+          console.log('------------Error----------');
+        }
+      }catch(error){
+        console.log(error);
+      }
     };
     fetchData();
   }, []);

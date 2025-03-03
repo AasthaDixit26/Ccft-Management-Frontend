@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Box,
   Table,
@@ -14,18 +14,20 @@ import {
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import UserModal from "./userModal";
-import Swal from "sweetalert2";
+// import Swal from "sweetalert2";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Sidebar from "./sidebar";
+import { getLocalStorage, handleHttpRequest } from "../api/utility/Utility";
+import { useNavigate } from "react-router-dom";
+import { getAllUser } from "../api/const/api-url";
 
 const User = () => {
   const [open, setOpen] = useState(false);
+  const navigate = useNavigate();
   const [editUser, setEditUser] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [users, setUsers] = useState([
-    { id: 101, name: "John Doe", email: "john@example.com", role: "Admin", status: "Active", joined: "2023-05-12" },
-    { id: 102, name: "Jane Smith", email: "jane@example.com", role: "User", status: "Pending", joined: "2023-06-15" },
   ]);
 
   const handleOpen = (user = null) => {
@@ -37,6 +39,28 @@ const User = () => {
     setOpen(false);
     setEditUser(null);
   };
+
+  useEffect(()=>{
+    const fetchUser = async() =>{ 
+        try{
+          const token = getLocalStorage();
+          if(token === null){
+            navigate("/")
+          }
+          const response = await handleHttpRequest("GET",getAllUser, "", true,token);
+          if(response.status === 202){
+            setUsers(response.data);
+          }else{
+            console.log('------------Error----------');
+          }
+        }catch(error){
+          console.log(error);
+        }
+    }
+    fetchUser();
+  })
+
+
 
   const handleUserSubmit = (userData) => {
     if (editUser) {
@@ -89,11 +113,11 @@ const User = () => {
             <TableHead sx={{ backgroundColor: "#eeeeee" }}>
               <TableRow>
                 <TableCell>ID</TableCell>
-                <TableCell>Name</TableCell>
+                {/* <TableCell>Name</TableCell> */}
                 <TableCell>Email</TableCell>
                 <TableCell>Role</TableCell>
-                <TableCell>Status</TableCell>
-                <TableCell>Joined Date</TableCell>
+                {/* <TableCell>Status</TableCell>
+                <TableCell>Joined Date</TableCell> */}
                 <TableCell>Actions</TableCell>
               </TableRow>
             </TableHead>
@@ -101,11 +125,11 @@ const User = () => {
               {users.map((user) => (
                 <TableRow key={user.id}>
                   <TableCell>{user.id}</TableCell>
-                  <TableCell>{user.name}</TableCell>
+                  {/* <TableCell>{user.name}</TableCell> */}
                   <TableCell>{user.email}</TableCell>
                   <TableCell>{user.role}</TableCell>
-                  <TableCell>{user.status}</TableCell>
-                  <TableCell>{user.joined}</TableCell>
+                  {/* <TableCell>{user.status}</TableCell>
+                  <TableCell>{user.joined}</TableCell> */}
                   <TableCell>
                     <Box sx={{ display: "flex", gap: 1 }}>
                       <EditIcon sx={{ cursor: "pointer", color: "#2196f3" }} onClick={() => handleOpen(user)} />
