@@ -20,7 +20,7 @@ import VendorForm from "./VendorForm";
 import Sidebar from "./sidebar";
 import Swal from "sweetalert2";
 import { useNavigate } from "react-router-dom";
-import { getAllVendor } from "../api/const/api-url";
+import { addVendor, deleteVendor, getAllVendor, updateVendor } from "../api/const/api-url";
 import { getLocalStorage, handleHttpRequest } from "../api/utility/Utility";
 
 const Vendor = () => {
@@ -62,11 +62,38 @@ const Vendor = () => {
 
   const handleSubmit = (data) => {
     if (editingVendor) {
-      setVendors(
-        vendors.map((v) => (v.v_id === editingVendor.v_id ? { ...v, ...data } : v))
-      );
+      const addUsers = async()=>{
+        const token=getLocalStorage();
+        if(token ===null){
+          navigate("/")
+        }else{
+          const response = await handleHttpRequest("PUT",updateVendor,data,true,token)
+          if(response.status===202){
+           alert("Vendor updated Successfully.")
+          }else{
+            alert("Something went wrong.")
+          }
+        }
+        }
+        addUsers();
+
+      
     } else {
-      setVendors([...vendors, { v_id: Date.now().toString(), ...data }]);
+          const addUsers = async()=>{
+            const token=getLocalStorage();
+            if(token ===null){
+              navigate("/")
+            }else{
+              const response = await handleHttpRequest("POST",addVendor,data,true,token)
+              // const response = 202;
+              if(response.status===202){
+                alert("Vendor added Successfully.")
+              }else{
+                alert("Something went wrong.")
+              }
+            }
+            }
+            addUsers();
     }
     handleClose();
   };
@@ -82,12 +109,32 @@ const Vendor = () => {
       confirmButtonText: 'Yes, delete it!'
     }).then((result) => {
       if (result.isConfirmed) {
-        setVendors(vendors.filter((vendor) => vendor.v_id !== id));
-        Swal.fire(
-          'Deleted!',
-          'Your vendor has been deleted.',
-          'success'
-        );
+        const request = {
+          id : id
+        }
+        const deleteUsers=async()=>{
+                  const token = getLocalStorage();
+                  if(token === null){
+                    navigate("/")
+                  }else{
+                    const response = await handleHttpRequest("DELETE",deleteVendor,request,true,token);
+                    // console.log(id+ typeof(id));
+                    if(response){
+                      Swal.fire(
+                        'Deleted!',
+                        'Your vendor has been deleted.',
+                        'success'
+                      );
+                    }else{
+                      Swal.fire(
+                        'Deleted!',
+                        'Something went wrong.',
+                        'success'
+                      );
+                    }
+                  }
+                }
+                deleteUsers();
       }
     });
   };

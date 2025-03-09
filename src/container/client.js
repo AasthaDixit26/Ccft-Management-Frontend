@@ -18,7 +18,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import ClientForm from "./ClientForm";
 import Sidebar from "./sidebar";
 import Swal from "sweetalert2";
-import { getAllClient } from "../api/const/api-url";
+import { addClient, deleteClient, getAllClient, updateClient } from "../api/const/api-url";
 import { getLocalStorage, handleHttpRequest } from "../api/utility/Utility";
 import { useNavigate } from "react-router-dom";
 
@@ -38,6 +38,7 @@ const Client = () => {
         }
         const response = await handleHttpRequest("GET", getAllClient, "", true, token);
         if (response.status === 202) {
+          console.log(response.data)
           setClients(response.data);
         } else {
           console.log('------------Error----------');
@@ -60,66 +61,44 @@ const Client = () => {
   };
 
   const handleSubmit = async (data) => {
-    try {
+    const token = getLocalStorage();
+    let response;
+
+    if (editingClient) {
+      // If editing, send a PUT request
       const token = getLocalStorage();
-      let response;
-      
-      if (editingClient) {
-        // If editing, send a PUT request
-        response = await handleHttpRequest(
-          "PUT", 
-          `${getAllClient}/${editingClient.id}`, 
-          data, 
-          true, 
-          token
-        );
-        
-        if (response.status === 202) {
-          setClients(
-            clients.map((c) => (c.id === editingClient.id ? { ...c, ...data } : c))
-          );
-          Swal.fire({
-            title: 'Success',
-            text: 'Client updated successfully',
-            icon: 'success',
-            timer: 1500,
-            showConfirmButton: false
-          });
-        } else {
-          Swal.fire('Error', 'Failed to update client', 'error');
-        }
+      if (token === null) {
+        navigate("/")
       } else {
-        // If creating new, send a POST request
-        response = await handleHttpRequest(
-          "POST", 
-          getAllClient, 
-          data, 
-          true, 
-          token
-        );
-        
-        if (response.status === 201) {
-          setClients([...clients, response.data]);
-          Swal.fire({
-            title: 'Success',
-            text: 'Client added successfully',
-            icon: 'success',
-            timer: 1500,
-            showConfirmButton: false
-          });
+        response = await handleHttpRequest("PUT", updateClient, data, true, token);
+        if (response.status === 202) {
+          alert("Client Updated Succesfully.")
         } else {
-          Swal.fire('Error', 'Failed to add client', 'error');
+          alert("Something went wrong. ")
         }
       }
-    } catch (error) {
-      console.log(error);
-      Swal.fire('Error', 'Something went wrong', 'error');
+    } else {
+      const token = getLocalStorage();
+      if (token === null) {
+        navigate("/")
+      } else {
+        const response = await handleHttpRequest("POST", addClient, data, true, token)
+        // const response = 202;
+        if (response.status === 202) {
+          alert("Client added Successfully.")
+        } else {
+          alert("Something went wrong.")
+        }
+      }
+
     }
-    
+
+
     handleClose();
   };
 
   const handleDelete = async (id) => {
+    // alert(id);
     Swal.fire({
       title: 'Are you sure?',
       text: "You won't be able to revert this!",
@@ -130,40 +109,32 @@ const Client = () => {
       confirmButtonText: 'Yes, delete it!'
     }).then(async (result) => {
       if (result.isConfirmed) {
-        try {
-          const token = getLocalStorage();
-          const response = await handleHttpRequest(
-            "DELETE",
-            `${getAllClient}/${id}`,
-            "",
-            true,
-            token
-          );
-          
-          if (response.status === 200 || response.status === 204) {
-            setClients(clients.filter((client) => client.id !== id));
-            Swal.fire({
-              title: 'Deleted!',
-              text: 'Your client has been deleted.',
-              icon: 'success',
-              timer: 1500,
-              showConfirmButton: false
-            });
-          } else {
-            Swal.fire(
-              'Error',
-              'Failed to delete client',
-              'error'
-            );
-          }
-        } catch (error) {
-          console.log(error);
-          Swal.fire(
-            'Error',
-            'Something went wrong',
-            'error'
-          );
+        const request = {
+          id: id
         }
+        const deleteUsers = async () => {
+          const token = getLocalStorage();
+          if (token === null) {
+            navigate("/")
+          } else {
+            const response = await handleHttpRequest("DELETE", deleteClient, request, true, token);
+            // console.log(id+ typeof(id));
+            if (response) {
+              Swal.fire(
+                'Deleted!',
+                'Your Client has been deleted.',
+                'success'
+              );
+            } else {
+              Swal.fire(
+                'Deleted!',
+                'Something went wrong.',
+                'success'
+              );
+            }
+          }
+        }
+        deleteUsers();
       }
     });
   };
@@ -215,7 +186,7 @@ const Client = () => {
             <TableHead sx={{ backgroundColor: "#eeeeee" }}>
               <TableRow>
                 <TableCell>S.No</TableCell>
-                <TableCell>ID</TableCell> 
+                <TableCell>ID</TableCell>
                 <TableCell>Client Name</TableCell>
                 <TableCell>Address</TableCell>
                 <TableCell>GST</TableCell>
@@ -230,7 +201,7 @@ const Client = () => {
               {clients.map((client, index) => (
                 <TableRow key={client.id}>
                   <TableCell>{index + 1}</TableCell>
-                  <TableCell>{client.c_id}</TableCell> 
+                  <TableCell>{client.c_id}</TableCell>
                   <TableCell>{client.c_name}</TableCell>
                   <TableCell>{client.c_full_address}</TableCell>
                   <TableCell>{client.c_gst}</TableCell>
@@ -249,7 +220,7 @@ const Client = () => {
                         <EditIcon fontSize="small" />
                       </IconButton>
                       <IconButton
-                        onClick={() => handleDelete(client.id)}
+                        onClick={() => handleDelete(client.c_id)}
                         aria-label="delete"
                         sx={{ color: "#f44336", p: 0.5 }}
                         size="small"
@@ -274,12 +245,12 @@ const Client = () => {
           justifyContent: "center",
         }}
       >
-        <Box sx={{ 
-          width: "100%", 
-          maxWidth: 500, 
+        <Box sx={{
+          width: "100%",
+          maxWidth: 500,
           mx: 2,
           maxHeight: '80vh',
-          outline: 'none' 
+          outline: 'none'
         }}>
           <ClientForm
             formData={editingClient || {}}

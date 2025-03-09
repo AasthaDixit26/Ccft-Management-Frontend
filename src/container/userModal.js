@@ -1,109 +1,170 @@
 import React, { useState, useEffect } from "react";
-import { Modal, Box, TextField, Button, Typography } from "@mui/material";
+import { Modal, Box, TextField, Button, Typography, Snackbar, CardContent, styled, Card } from "@mui/material";
+import { getLocalStorage, handleHttpRequest } from "../api/utility/Utility";
+import { useNavigate } from "react-router-dom";
 
-const UserModal = ({ open, handleClose, user, handleUserSubmit }) => {
+const FormContainer = styled(Box)({
+  padding: '24px',
+  backgroundColor: 'white',
+  borderRadius: '8px',
+});
+const StyledCard = styled(Card)({
+  maxWidth: 600,
+  margin: '32px auto',
+  backgroundColor: '#f8fafc',
+  boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
+  borderRadius: '12px',
+});
+const StyledTextField = styled(TextField)({
+  '& .MuiOutlinedInput-root': {
+    backgroundColor: 'white',
+    '&:hover fieldset': {
+      borderColor: '#3f51b5',
+    },
+    '&.Mui-focused fieldset': {
+      borderColor: '#3f51b5',
+    },
+  },
+});
+
+
+const UserModal = ({ userData = {}, onSubmit, onCancel, isEditMode = false }) => {
   const [formData, setFormData] = useState({
-    id: "",
-    email: "",
-    role: "",
+    id: userData.id || null,
+    email: userData.email || "",
+    password: userData.password || "",
+    role: userData.role || ""
   });
-
-  useEffect(() => {
-    if (user) {
-      setFormData(user);
-    } else {
-      setFormData({
-        id: "",
-        email: "",
-        role: "",
-      });
-    }
-  }, [user]);
+  let [toastBar,setToastBar] = useState({"val":0,"status":false});
+  
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prevData) => ({
-      ...prevData,
-      [name]: value,
-    }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    console.log(formData);
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    handleUserSubmit(formData);
+    onSubmit({ 
+      id: userData.id || `user-${Date.now()}`, 
+      ...formData 
+    });
   };
 
   return (
-    <Modal open={open} onClose={handleClose}>
-      <Box
-        sx={{
-          position: "absolute",
-          top: "50%",
-          left: "50%",
-          transform: "translate(-50%, -50%)",
-          width: 400,
-          bgcolor: "background.paper",
-          boxShadow: 24,
-          p: 4,
-          borderRadius: 1,
-        }}
-      >
-        <Box
-          sx={{
-            bgcolor: '#3f51b5',
-            color: 'white',
-            p: 2,
-            borderTopLeftRadius: '12px',
-            borderTopRightRadius: '12px',
-            mb: 2,
-          }}
-        >
-          <Typography variant="h6">
-            {user ? 'Edit User' : 'Add User'}
-          </Typography>
+    <>
+    {
+      toastBar.val === 1 ? <Snackbar
+          open={toastBar.status}
+          autoHideDuration={3000}
+          onClose={() => setToastBar(false)}
+          message="Successfully Logged In"
+          anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+        /> : 
+        <Snackbar
+          open={toastBar.status}
+          autoHideDuration={3000}
+          onClose={() => setToastBar(false)}
+          message="Invalid Username or password"
+          anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+        />
+      }
+    <StyledCard sx={{ m: 0, width: '100%' }}>
+      <CardContent sx={{ p: 0 }}>
+        <Box sx={{ 
+          bgcolor: '#3f51b5', 
+          color: 'white', 
+          p: 3, 
+          borderTopLeftRadius: '12px',
+          borderTopRightRadius: '12px'
+        }}>
+          <Typography variant="h5">{isEditMode ? 'Edit User' : 'Add New User'}</Typography>
         </Box>
-        <form onSubmit={handleSubmit}>
-          {formData.id && (
-            <TextField
+
+        <FormContainer>
+           <form onSubmit={handleSubmit}>
+           {isEditMode && (
+              <StyledTextField
+                fullWidth
+                label="User ID"
+                name="id"
+                value={userData.id || ''}
+                InputProps={{
+                  readOnly: true,
+                }}
+                sx={{ 
+                  mb: 3,
+                  "& .MuiInputBase-input.Mui-disabled": {
+                    WebkitTextFillColor: "#666",
+                  }
+                }}
+                disabled
+              />
+            )}
+
+            <StyledTextField
               fullWidth
-              label="User ID"
-              name="id"
-              value={formData.id}
-              InputProps={{
-                readOnly: true,
-              }}
-              sx={{ mb: 2 }}
+              label="User Email"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+              sx={{ mb: 3 }}
+              required
             />
-          )}
-          <TextField
-            fullWidth
-            label="Email"
-            name="email"
-            value={formData.email}
-            onChange={handleChange}
-            sx={{ mb: 2 }}
-            required
-          />
-          <TextField
-            fullWidth
-            label="Role"
-            name="role"
-            value={formData.role}
-            onChange={handleChange}
-            sx={{ mb: 2 }}
-            required
-          />
+             <StyledTextField
+              fullWidth
+              label="Password"
+              name="password"
+              value={formData.password}
+              onChange={handleChange}
+              sx={{ mb: 3 }}
+              required
+            />
+
+            <StyledTextField
+              fullWidth
+              label="Role"
+              name="role"
+              value={formData.role}
+              onChange={handleChange}
+              sx={{ mb: 3 }}
+              required
+            />
+
           <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 2 }}>
-            <Button variant="outlined" onClick={handleClose}>
-              Cancel
-            </Button>
-            <Button type="submit" variant="contained" color="primary">
-              {user ? "Update" : "Create"}
-            </Button>
+             <Button
+                            variant="outlined"
+                            onClick={onCancel}
+                            sx={{
+                              color: '#3f51b5',
+                              borderColor: '#3f51b5',
+                              '&:hover': {
+                                borderColor: '#303f9f',
+                                backgroundColor: 'rgba(63, 81, 181, 0.04)',
+                              },
+                            }}
+                          >
+                            Cancel
+                          </Button>
+                          <Button
+                            type="submit"
+                            variant="contained"
+                            sx={{
+                              bgcolor: '#3f51b5',
+                              '&:hover': {
+                                bgcolor: '#303f9f',
+                              },
+                            }}
+                          >
+                            {isEditMode ? 'Update User' : 'Add User'}
+                          </Button>
           </Box>
         </form>
-      </Box>
-    </Modal>
+        </FormContainer>
+      </CardContent>
+    </StyledCard>
+    </>
   );
 };
 

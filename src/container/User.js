@@ -10,6 +10,7 @@ import {
   Paper,
   Button,
   Typography,
+  Modal,
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -20,7 +21,9 @@ import "react-toastify/dist/ReactToastify.css";
 import Sidebar from "./sidebar";
 import { getLocalStorage, handleHttpRequest } from "../api/utility/Utility";
 import { useNavigate } from "react-router-dom";
-import { getAllUser } from "../api/const/api-url";
+import { addUser, deleteUser, getAllUser, updateUser } from "../api/const/api-url";
+
+
 
 const User = () => {
   const [open, setOpen] = useState(false);
@@ -59,17 +62,49 @@ const User = () => {
     fetchUser();
   }, [navigate]);
 
-  const handleUserSubmit = (userData) => {
+  const handleSubmit = (userData) => {
     if (editUser) {
-      setUsers(users.map((u) => (u.id === editUser.id ? { ...u, ...userData } : u)));
+      // setUsers(users.map((u) => (u.id === editUser.id ? { ...u, ...userData } : 
+      // u)));
+      const addUsers = async()=>{
+        const token=getLocalStorage();
+        if(token ===null){
+          navigate("/")
+        }else{
+          const response = await handleHttpRequest("PUT",updateUser,userData,true,token)
+          // const response = 202;
+          if(response.status===202){
+            console.log("update")
+          }else{
+            console.log("Not update")
+          }
+        }
+        }
+        addUsers();
     } else {
-      const newId = Math.floor(Math.random() * 900) + 100;
-      setUsers([...users, { ...userData, id: newId, joined: new Date().toISOString().split("T")[0] }]);
+      const addUsers = async()=>{
+      const token=getLocalStorage();
+      if(token ===null){
+        navigate("/")
+      }else{
+        const response = await handleHttpRequest("POST",addUser,userData,true,token)
+        // const response = 202;
+        if(response.status===202){
+          console.log("add")
+        }else{
+          console.log("Not add")
+        }
+      }
+      }
+      addUsers();
     }
     handleClose();
   };
 
   const handleDelete = (id) => {
+    const request = {
+      id : id
+    }
     Swal.fire({
       title: 'Are you sure?',
       text: "You won't be able to revert this!",
@@ -80,16 +115,33 @@ const User = () => {
       confirmButtonText: 'Yes, delete it!'
     }).then((result) => {
       if (result.isConfirmed) {
-        setUsers(users.filter((user) => user.id !== id));
+        // setUsers(users.filter((user) => user.id !== id));
+        const deleteUsers=async()=>{
+          const token = getLocalStorage();
+          if(token === null){
+            navigate("/")
+          }else{
+            console.log(request.id);
+            console.log(request);
+            const response = await handleHttpRequest("DELETE",deleteUser,request,true,token);
+            // console.log(id+ typeof(id));
+            if(response){
+              console.log("deleted");
+            }else{
+              console.log("error")
+            }
+          }
+        }
+        deleteUsers();
         Swal.fire(
           'Deleted!',
           'Your user has been deleted.',
           'success'
         );
-      }
-    });
-  };
 
+      }
+    })
+  }
   return (
     <Box sx={{ p: 3 }}>
       <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
@@ -154,10 +206,24 @@ const User = () => {
           </Table>
         </TableContainer>
       </Box>
-      <UserModal open={open} handleClose={handleClose} user={editUser} handleUserSubmit={handleUserSubmit} />
+    <Modal
+        open={open}
+        onClose={handleClose}
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <Box sx={{ width: "100%", maxWidth: 600, mx: 2 }}>
+        <UserModal  userData={editUser || {}}
+            onSubmit={handleSubmit}
+            onCancel={handleClose}
+            isEditMode={!!editUser} />
+        </Box>
+      </Modal>
       <ToastContainer />
     </Box>
   );
 };
-
 export default User;

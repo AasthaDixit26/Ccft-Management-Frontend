@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Box,
   Typography,
@@ -16,6 +16,7 @@ import {
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import VendorForm from './VendorForm';
+import { preconnect } from 'react-dom';
 
 const StyledCard = styled(Card)({
   maxWidth: 600,
@@ -53,10 +54,51 @@ const TestForm = ({
   setVendors,
 }) => {
   const [isVendorFormOpen, setIsVendorFormOpen] = useState(false);
+  const [selectedOption, setSelectedOption] = useState(testData.vendor != null ? testData.vendor.v_name : '');
+  const [localFormData, setLocalFormData] = useState({
+    "t_id": testData.t_id || null,
+    "t_status": testData.t_status || null,
+    "t_name": testData.t_name || null,
+    "t_protocol": testData.t_protocol || null,
+    "t_update": testData.t_update || null,
+    "t_masked_report": null,
+    "vendor": testData.vendor || null
+  });
+
+  // Handle change event for dropdown
+  // const handleChange = (event) => {
+  //   setSelectedOption(event.target.value); // Update the state with the selected value
+  // };
+
+  const handleChangeText = (e) => {
+    const { name, value } = e.target;
+    // console.log(e.target.name+"<>"+e.target.value);
+    if (name === 'vendor') {
+      setLocalFormData(prevData => ({
+        ...prevData,
+        [name]: vendors.filter((vendor) => vendor.v_name === e.target.value)[0]
+      }))
+      setSelectedOption(e.target.value)
+    }
+
+    else {
+      setLocalFormData(prevdata => ({
+        ...prevdata,
+        [name]: value,
+      }));
+      // console.log(isEditMode+"<>",localFormData);
+    }
+
+    // console.log(localFormData)
+    // if (onChange) {
+    //   onChange(e);
+    // }
+  };
 
   const handleOpenVendorForm = () => {
     setIsVendorFormOpen(true);
   };
+
 
   const handleCloseVendorForm = () => {
     setIsVendorFormOpen(false);
@@ -69,8 +111,10 @@ const TestForm = ({
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSubmit(testData);
+    onSubmit(localFormData);
+    // console.log(localFormData);
   };
+
 
   return (
     <StyledCard>
@@ -97,11 +141,11 @@ const TestForm = ({
                 fullWidth
                 label="Test ID"
                 name="t_id"
-                value={testData.t_id || ''}
+                value={localFormData.t_id || ''}
                 InputProps={{
                   readOnly: true,
                 }}
-                sx={{ 
+                sx={{
                   mb: 3,
                   "& .MuiInputBase-input.Mui-disabled": {
                     WebkitTextFillColor: "#666",
@@ -110,13 +154,13 @@ const TestForm = ({
                 disabled
               />
             )}
-            
+
             <StyledTextField
               fullWidth
               label="Test Name"
               name="t_name"
-              value={testData.t_name || ''}
-              onChange={onChange}
+              value={localFormData.t_name || ''}
+              onChange={handleChangeText}
               sx={{ mb: 3 }}
               required
             />
@@ -125,8 +169,8 @@ const TestForm = ({
               fullWidth
               label="Status"
               name="t_status"
-              value={testData.t_status || ''}
-              onChange={onChange}
+              value={localFormData.t_status || ''}
+              onChange={handleChangeText}
               sx={{ mb: 3 }}
               required
             />
@@ -135,8 +179,8 @@ const TestForm = ({
               fullWidth
               label="Protocol"
               name="t_protocol"
-              value={testData.t_protocol || ''}
-              onChange={onChange}
+              value={localFormData.t_protocol || ''}
+              onChange={handleChangeText}
               sx={{ mb: 3 }}
               required
             />
@@ -145,28 +189,28 @@ const TestForm = ({
               fullWidth
               label="Update"
               name="t_update"
-              value={testData.t_update || ''}
-              onChange={onChange}
+              value={localFormData.t_update || ''}
+              onChange={handleChangeText}
               sx={{ mb: 3 }}
               required
             />
 
-            <StyledTextField
+            {/* <StyledTextField
               fullWidth
               name="t_masked_report"
               type="file"
               onChange={onChange}
               sx={{ mb: 3 }}
               required
-            />
+            /> */}
 
             <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-              <FormControl fullWidth>
-                <InputLabel>Vendor ID</InputLabel>
+              {/* <FormControl fullWidth>
+                <InputLabel>Vendor Name</InputLabel>
                 <Select
                   name="vendor_id"
-                  value={testData.vendor?.v_id || ''}
-                  onChange={onChange}
+                 value={selectedOption}
+                  onChange={handleChange}
                   label="Vendor ID"
                   required
                 >
@@ -176,12 +220,30 @@ const TestForm = ({
                     </MenuItem>
                   ))}
                 </Select>
+              </FormControl> */}
+              <FormControl fullWidth>
+                <InputLabel id="vendor-select-label">Select Vendor</InputLabel>
+
+                <Select
+                  labelId="vendor-select-label"
+                  name="vendor"
+                  value={selectedOption}
+                  onChange={handleChangeText}
+                  label="Select Vendor"
+                >
+                  {vendors.map((vendor) => (
+                    <MenuItem value={vendor.v_name} >
+                      {vendor.v_name}
+                    </MenuItem>
+                  ))}
+                </Select>
               </FormControl>
-              <IconButton 
-                color="primary" 
+              {/* <p>Selected Vendor ID: {selectedOption}</p> */}
+              <IconButton
+                color="primary"
                 onClick={handleOpenVendorForm}
-                sx={{ 
-                  bgcolor: '#3f51b5', 
+                sx={{
+                  bgcolor: '#3f51b5',
                   color: 'white',
                   '&:hover': {
                     bgcolor: '#303f9f',
@@ -251,7 +313,7 @@ const TestForm = ({
           borderRadius: '12px',
           outline: 'none',
         }}>
-          <VendorForm 
+          <VendorForm
             onSubmit={handleVendorFormSubmit}
             onCancel={handleCloseVendorForm}
           />

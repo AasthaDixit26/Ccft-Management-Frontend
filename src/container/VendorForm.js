@@ -37,11 +37,13 @@ const StyledTextField = styled(TextField)({
 
 const VendorForm = ({ vendorData = {}, onSubmit, onCancel, isEditMode = false }) => {
   const [formData, setFormData] = useState({
+    v_id : vendorData.v_id || null,
     v_name: vendorData.v_name || '',
     v_poc: vendorData.v_poc || '',
     v_add: vendorData.v_add || '',
     phone: vendorData.phone || '',
     v_gst: vendorData.v_gst || '',
+    v_date_added: vendorData.v_date_added || null,
   });
 
   const handleChange = (e) => {
@@ -52,7 +54,7 @@ const VendorForm = ({ vendorData = {}, onSubmit, onCancel, isEditMode = false })
   const handleSubmit = (e) => {
     e.preventDefault();
     onSubmit({ 
-      v_id: vendorData.v_id || `vendor-${Date.now()}`, 
+      v_id: vendorData.v_id || null, 
       ...formData 
     });
   };

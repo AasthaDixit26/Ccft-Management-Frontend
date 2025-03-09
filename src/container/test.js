@@ -25,18 +25,20 @@ import VendorForm from "./VendorForm";
 import Sidebar from "./sidebar";
 import Swal from "sweetalert2";
 import { getLocalStorage, handleHttpRequest } from "../api/utility/Utility";
-import { getAllTest } from "../api/const/api-url";
+import { addTest, deleteTest, getAllTest, getAllVendor, updateTest } from "../api/const/api-url";
 import { useNavigate } from "react-router-dom";
 
 const Test = () => {
-  const [tests, setTests] = useState([]);
-  const [vendors, setVendors] = useState([]);
-  const [open, setOpen] = useState(false);
-  const [isVendorFormOpen, setIsVendorFormOpen] = useState(false);
-  const [editingTest, setEditingTest] = useState(null);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
-  const navigate = useNavigate();
+  let [tests, setTests] = useState([]);
+  let [vendors, setVendors] = useState([]);
+  let [open, setOpen] = useState(false);
+  let [isVendorFormOpen, setIsVendorFormOpen] = useState(false);
+  let [editingTest, setEditingTest] = useState(null);
+  let [sidebarOpen, setSidebarOpen] = useState(true);
+  let navigate = useNavigate();
+
   useEffect(() => {
+    
     const fetchData = async () => {
       try{
         const token = getLocalStorage();
@@ -45,7 +47,8 @@ const Test = () => {
         }
         const response = await handleHttpRequest("GET",getAllTest, "", true,token);
         if(response.status === 202){
-          setTests(response.data);
+          setTests(tests=response.data);
+          console.log(tests)
         }else{
           console.log('------------Error----------');
         }
@@ -54,9 +57,29 @@ const Test = () => {
       }
     };
     fetchData();
+    const fetchDataClient = async () => {
+          try{
+            const token = getLocalStorage();
+            if(token === null){
+              navigate("/")
+            }
+            const response = await handleHttpRequest("GET",getAllVendor, "", true,token);
+            if(response.status === 202){
+              // console.log(response.data)
+              setVendors(response.data);
+              // console.log(vendors);
+            }else{
+              console.log('------------Error----------');
+            }
+          }catch(error){
+            console.log(error);
+          }
+        };
+        fetchDataClient();
   }, []);
 
   const handleOpen = (test = null) => {
+    console.log(test);
     setEditingTest(test);
     setOpen(true);
   };
@@ -68,11 +91,37 @@ const Test = () => {
 
   const handleSubmit = (data) => {
     if (editingTest) {
-      setTests(
-        tests.map((t) => (t.t_id === editingTest.t_id ? { ...t, ...data } : t))
-      );
+      const updateEntity = async(data)=>{
+      const token = getLocalStorage();
+            if (token === null) {
+              navigate("/")
+            } else {
+              const response = await handleHttpRequest("PUT", updateTest, data, true, token);
+              if (response.status === 202) {
+                alert("Client Updated Succesfully.")
+              } else {
+                alert("Something went wrong. ")
+              }
+            }
+          }
+          updateEntity(data)
     } else {
-      setTests([...tests, { t_id: Date.now().toString(), ...data }]);
+      const addEntity = async(data) =>{
+        const token = getLocalStorage();
+              if (token === null) {
+                navigate("/")
+              } else {
+                console.log(data);
+                const response = await handleHttpRequest("POST", addTest, data, true, token)
+                // const response = 202;
+                if (response.status === 202) {
+                  alert("Client added Successfully.")
+                } else {
+                  alert("Something went wrong.")
+                }
+              }
+      }
+      addEntity(data);
     }
     handleClose();
   };
@@ -88,12 +137,23 @@ const Test = () => {
       confirmButtonText: 'Yes, delete it!'
     }).then((result) => {
       if (result.isConfirmed) {
-        setTests(tests.filter((test) => test.t_id !== id));
-        Swal.fire(
-          'Deleted!',
-          'Your test has been deleted.',
-          'success'
-        );
+        // setTests(tests.filter((test) => test.t_id !== id));
+        // Swal.fire(
+        //   'Deleted!',
+        //   'Your test has been deleted.',
+        //   'success'
+        // );
+        const deleteTests = async(id)=>{
+          const token = getLocalStorage();
+          const response = await handleHttpRequest("DELETE",deleteTest,{id:id},true,token);
+          // console.log(response);
+          if(response.status===202){
+            alert("Test Deleted Successfully.")
+          }else{
+            alert("Something wen wrong.")
+          }
+        }
+          deleteTests(id);
       }
     });
   };
@@ -178,7 +238,7 @@ const Test = () => {
                   <TableCell>{test.t_status}</TableCell>
                   <TableCell>{test.t_protocol}</TableCell>
                   <TableCell>{test.t_update}</TableCell>
-                  <TableCell>{test.t_masked_report}</TableCell>
+                  {/* <TableCell>{test.t_masked_report}</TableCell> */}
                   <TableCell>{test.vendor.v_name}</TableCell>
                   <TableCell>
                     <Box sx={{ display: "flex", gap: 1 }}>
@@ -214,6 +274,8 @@ const Test = () => {
             onSubmit={handleSubmit}
             onCancel={handleClose}
             isEditMode={!!editingTest}
+            vendors={vendors}
+            setVendors
           />
         </Box>
       </Modal>

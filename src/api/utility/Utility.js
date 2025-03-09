@@ -22,7 +22,8 @@ export async function handleHttpRequest(requestType, endpoint, payload = {}, isT
     }
 
     const config = { headers };
-
+    console.log(`${endpoint}`);
+    console.log(payload);
     let response;
     switch (requestType.toUpperCase()) {
       case "GET":
@@ -35,7 +36,10 @@ export async function handleHttpRequest(requestType, endpoint, payload = {}, isT
         response = await axios.put(`${API_BASE_URL}${endpoint}`, payload, config);
         break;
       case "DELETE":
-        response = await axios.delete(`${API_BASE_URL}${endpoint}`, config);
+        response = await axios.delete(`${API_BASE_URL}${endpoint}`,{
+          data: payload,
+          headers : headers
+        });
         break;
       default:
         throw new Error("Invalid request type. Use GET, POST, PUT, or DELETE.");
